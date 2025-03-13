@@ -18,8 +18,7 @@ class ProfileInformationController extends Controller
      * @param  \Laravel\Fortify\Contracts\UpdatesUserProfileInformation  $updater
      * @return \Laravel\Fortify\Contracts\ProfileInformationUpdatedResponse
      */
-    public function update(Request $request,
-                           UpdatesUserProfileInformation $updater)
+    public function update(Request $request,UpdatesUserProfileInformation $updater)
     {
         if (config('fortify.lowercase_usernames')) {
             $request->merge([
