@@ -1,7 +1,7 @@
 # coachtech-mockcase-2
 ## 環境構築
 Dockerビルド  
-1.git clone git@github.com:coachtech-material/laravel-docker-template.git  
+1.git clone git@github.com:Estra-Coachtech/coachtech-mockcase-2.git 
 2.docker-compose up -d --build  
 
 Lavaral環境構築  
