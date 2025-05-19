@@ -5,47 +5,38 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\AttendanceRecord;
 use App\Models\User;
+use Carbon\Carbon;
 
 class AttendanceRecordFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array
-     */
+    protected $model = AttendanceRecord::class;
+
     public function definition()
     {
+        // ユーザーID
         $userIds = User::pluck('id');
+        $userId  = $userIds->random();
 
-        $date = $this->faker->dateTimeBetween('2024-01-01', '2024-12-31')->format('Y-m-d');
+        // 日付と打刻（実際にはCarbonインスタンスを渡し、モデルのキャストでH:iに）
+        $date     = $this->faker->dateTimeBetween('2024-01-01', '2024-12-31')->format('Y-m-d');
+        $clockIn  = Carbon::createFromFormat('Y-m-d H:i:s', $date.' '.$this->faker->time('H:i:s'));
+        $clockOut = Carbon::createFromFormat('Y-m-d H:i:s', $date.' '.$this->faker->time('H:i:s'))
+                      ->addHours(rand(6, 10)); // 出退勤間隔は6〜10時間のランダム
 
-        $clock_in = \DateTime::createFromFormat('Y-m-d H:i:s', $date . ' ' . $this->faker->time('H:i:s'));
-        $clock_out = $this->faker->dateTimeBetween($clock_in, \DateTime::createFromFormat('Y-m-d H:i:s', $date . ' 24:00:00'));
+        // 休憩時間合計はあとで BreaksTableSeeder が入れるので、ここではゼロでもOK
+        $totalBreakSeconds = 0;
 
-        $break_time_limit = 2 * 60 * 60;
-        $break_in = $this->faker->dateTimeBetween($clock_in, $clock_out);
-        $break_out = $this->faker->dateTimeBetween($break_in, $clock_out);
-        $break2_in = $this->faker->dateTimeBetween($break_out, $clock_out);
-        $break2_out = $this->faker->dateTimeBetween($break2_in, $clock_out);
-
-        $first_break_duration = $break_out->getTimestamp() - $break_in->getTimestamp();
-        $second_break_duration = $break2_out->getTimestamp() - $break2_in->getTimestamp();
-
-        $total_break_time = min($first_break_duration + $second_break_duration, $break_time_limit);
-
-        $total_time = $clock_out->getTimestamp() - $clock_in->getTimestamp() - $total_break_time;
+        // 実働時間（秒） = 出退勤差 - 休憩
+        $workedSeconds = $clockOut->diffInSeconds($clockIn) - $totalBreakSeconds;
 
         return [
-            'user_id' => $userIds->random(),
-            'date' => $date,
-            'clock_in' => $clock_in,
-            'clock_out' => $clock_out,
-            'break_in' => $break_in,
-            'break_out' => $break_out,
-            'break2_in' => $break2_in,
-            'break2_out' => $break2_out,
-            'total_time' => gmdate('H:i', $total_time),
-            'total_break_time' => gmdate('H:i', $total_break_time),
+            'user_id'            => $userId,
+            'date'               => $date,
+            'clock_in'           => $clockIn,
+            'clock_out'          => $clockOut,
+            'total_break_time'   => gmdate('H:i', $totalBreakSeconds),
+            'total_time'         => gmdate('H:i', $workedSeconds),
+            'comment'            => $this->faker->optional()->sentence(),
         ];
     }
 }

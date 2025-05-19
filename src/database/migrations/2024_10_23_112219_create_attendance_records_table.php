@@ -8,8 +8,6 @@ class CreateAttendanceRecordsTable extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
     public function up()
     {
@@ -19,10 +17,6 @@ class CreateAttendanceRecordsTable extends Migration
             $table->date('date');
             $table->time('clock_in');
             $table->time('clock_out')->nullable();
-            $table->time('break_in')->nullable();
-            $table->time('break_out')->nullable();
-            $table->time('break2_in')->nullable();
-            $table->time('break2_out')->nullable();
             $table->string('total_time')->nullable();
             $table->string('total_break_time')->nullable();
             $table->string('comment')->nullable();
@@ -32,8 +26,6 @@ class CreateAttendanceRecordsTable extends Migration
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
     public function down()
     {
