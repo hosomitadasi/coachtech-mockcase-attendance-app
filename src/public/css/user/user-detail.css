@@ -31,8 +31,10 @@
     display: grid !important;
     grid-template-columns: 30% 1fr;
     align-items: center;
-    height: auto !important;    /* 高さ固定を解除 */
-    padding: 1rem 0;             /* 上下余白を統一 */
+    height: auto !important;
+    /* 高さ固定を解除 */
+    padding: 1rem 0;
+    /* 上下余白を統一 */
 }
 
 .form__group:not(:first-of-type) {
@@ -44,7 +46,8 @@
     color: #737373;
     font-weight: bold;
     padding-left: 80px;
-    width: 100%; /* Grid で幅は自動制御されるので指定不要 */
+    width: 100%;
+    /* Grid で幅は自動制御されるので指定不要 */
 }
 
 /* 入力グループ側は Flex のまま */
@@ -52,10 +55,14 @@
     display: flex !important;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;        /* 項目間の隙間 */
-    margin: 0 auto;     /* 中央寄せ */
-    padding: 0;         /* 余白リセット */
-    width: auto;        /* 幅は中身に合わせる */
+    gap: 0.5rem;
+    /* 項目間の隙間 */
+    margin: 0 auto;
+    /* 中央寄せ */
+    padding: 0;
+    /* 余白リセット */
+    width: auto;
+    /* 幅は中身に合わせる */
     min-width: 200px;
 }
 
@@ -215,7 +222,6 @@
     flex-direction: column;
     gap: 0.5rem;
     width: 100%;
-    padding-right: 50px;
 }
 
 /* 「〜」の余白を調整 */
@@ -223,4 +229,5 @@
     margin: 0;
     padding: 0 0.5rem;
 }
+
 /* ───────────────────────────────────────────────────────────────── */
