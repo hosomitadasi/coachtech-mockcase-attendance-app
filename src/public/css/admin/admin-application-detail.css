@@ -1,5 +1,5 @@
 .detail__content {
-    background: #F0EFF2;
+    background: #f0eff2;
     margin: 0 auto;
     max-width: 1540px;
     padding: 50px;
@@ -8,8 +8,7 @@
 
 .detail__header {
     border-left: 7px solid #000;
-    margin: 0 auto;
-    margin-bottom: 45px;
+    margin: 0 auto 45px;
     max-width: 100vh;
     padding-left: 5px;
 }
@@ -20,43 +19,42 @@
 }
 
 .applied-form__content {
-    background: #FFF;
-    border: 1px solid #E1E1E1;
+    background: #fff;
+    border: 1px solid #e1e1e1;
     border-radius: 10px;
 }
 
 .applied-form__group {
+    display: grid;
+    grid-template-columns: 30% 1fr;
     align-items: center;
-    display: flex;
-    height: 80px;
+    height: auto;
+    padding: 1rem 0;
 }
 
 .applied-form__group:not(:last-of-type) {
-    border-bottom: 2px solid #E1E1E1;
+    border-bottom: 2px solid #e1e1e1;
 }
 
 .applied-form__header {
     color: #737373;
     font-weight: bold;
     padding-left: 80px;
-    width: 30%;
+    width: 100%;
 }
 
 .applied-form__input-group {
-    padding-right: 50px;
-    width: 40%;
-}
-
-.applied-form__input-group {
-    align-items: center;
     display: flex;
+    align-items: center;
     justify-content: space-between;
+    gap: 0.5rem;
     margin: 0 auto;
+    padding: 0;
 }
 
 .applied-form__input,
 .applied-form__textarea {
-    border: 1px solid #E1E1E1;
+    border: 1px solid #e1e1e1;
     border-radius: 4px;
     font-weight: bold;
 }
@@ -74,9 +72,6 @@
     border: none;
     outline: none;
     width: 100%;
-}
-
-.applied-form__textarea {
     height: 50px;
     padding: 5px;
     resize: none;
@@ -88,7 +83,7 @@
 }
 
 .applied-form__text--item {
-    color: #FF0000;
+    color: #ff0000;
 }
 
 .applied-form__button {
@@ -100,7 +95,7 @@
     background: #000;
     border: none;
     border-radius: 5px;
-    color: #FFF;
+    color: #fff;
     font-size: 16px;
     font-weight: bold;
     padding: 5px 20px;
@@ -110,10 +105,21 @@
     background: #696969;
     border: none;
     border-radius: 5px;
-    color: #FFF;
+    color: #fff;
     display: inline-block;
     font-size: 16px;
     font-weight: bold;
-    margin-top: 0px;
+    margin-top: 0;
     padding: 7px 20px;
+}
+
+.form__break-group .applied-form__input-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.applied-form__input-group p {
+    margin: 0 auto;
+    padding: 0 0.5rem;
 }

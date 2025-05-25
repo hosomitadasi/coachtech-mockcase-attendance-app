@@ -1,10 +1,11 @@
 /* ───────────────────────────────────────────────────────────────── */
 /* 全体レイアウト */
 .detail__content {
-    background: #F0EFF2;
+    background: #f0eff2;
     margin: 0 auto;
     max-width: 1540px;
     padding: 50px;
+    padding-top: 50px;
 }
 
 .detail__header {
@@ -20,55 +21,43 @@
 }
 
 .form__content {
-    background: #FFF;
-    border: 1px solid #E1E1E1;
+    background: #fff;
+    border: 1px solid #e1e1e1;
     border-radius: 10px;
 }
 
-/* ───────────────────────────────────────────────────────────────── */
-/* すべての行を 2カラム Grid に切り替え */
 .form__group {
-    display: grid !important;
+    display: grid;
     grid-template-columns: 30% 1fr;
     align-items: center;
-    height: auto !important;
-    /* 高さ固定を解除 */
-    padding: 1rem 0;
-    /* 上下余白を統一 */
+    height: auto;
 }
 
 .form__group:not(:first-of-type) {
-    border-top: 2px solid #E1E1E1;
+    border-top: 2px solid #e1e1e1;
 }
 
-/* ラベル側 */
 .form__header {
     color: #737373;
     font-weight: bold;
     padding-left: 80px;
     width: 100%;
-    /* Grid で幅は自動制御されるので指定不要 */
 }
 
-/* 入力グループ側は Flex のまま */
 .form__input-group {
-    display: flex !important;
+    display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
-    /* 項目間の隙間 */
     margin: 0 auto;
-    /* 中央寄せ */
     padding: 0;
-    /* 余白リセット */
     width: auto;
-    /* 幅は中身に合わせる */
     min-width: 200px;
 }
 
 .form__input,
 .form__textarea {
-    border: 1px solid #E1E1E1;
+    border: 1px solid #e1e1e1;
     border-radius: 4px;
     font-weight: bold;
 }
@@ -78,7 +67,6 @@
     padding: 5px;
     text-align: center;
     width: 80px;
-    min-width: 80px;
 }
 
 .form__textarea {
@@ -103,7 +91,7 @@
     background: #000;
     border-radius: 5px;
     border: none;
-    color: #FFF;
+    color: #fff;
     font-size: 16px;
     font-weight: bold;
     padding: 8px 35px;
@@ -117,21 +105,21 @@
 }
 
 .applied-form__content {
-    background: #FFF;
-    border: 1px solid #E1E1E1;
+    background: #fff;
+    border: 1px solid #e1e1e1;
     border-radius: 10px;
 }
 
 .applied-form__group {
-    display: grid !important;
+    display: grid;
     grid-template-columns: 30% 1fr;
     align-items: center;
-    height: auto !important;
+    height: auto;
     padding: 1rem 0;
 }
 
 .applied-form__group:not(:last-of-type) {
-    border-bottom: 2px solid #E1E1E1;
+    border-bottom: 2px solid #e1e1e1;
 }
 
 .applied-form__header {
@@ -142,7 +130,7 @@
 }
 
 .applied-form__input-group {
-    display: flex !important;
+    display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
@@ -153,7 +141,7 @@
 
 .applied-form__input,
 .applied-form__textarea {
-    border: 1px solid #E1E1E1;
+    border: 1px solid #e1e1e1;
     border-radius: 4px;
     font-weight: bold;
 }
@@ -182,13 +170,13 @@
 }
 
 .applied-form__text--item {
-    color: #FF0000;
+    color: #ff0000;
 }
 
 /* ───────────────────────────────────────────────────────────────── */
 /* バリデーション・メッセージ */
 .error-message {
-    color: #FF0000;
+    color: #ff0000;
     margin-bottom: 10px;
     display: flex;
     justify-content: space-between;
@@ -206,7 +194,7 @@
 
 .readonly-message::before {
     color: rgba(255, 0, 0, 0.5);
-    content: '*';
+    content: "*";
     font-weight: bold;
 }
 
