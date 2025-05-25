@@ -33,20 +33,18 @@
                     <input class="applied-form__input" type="text" value="{{ $application->new_clock_out }}" readonly>
                 </div>
             </div>
-            <div class="applied-form__group">
+            <div class="applied-form__group form__break-group">
                 <p class="applied-form__header">休憩</p>
-                <div class="applied-form__input-group">
-                    <input class="applied-form__input" type="text" value="{{ $application->new_break_in }}" readonly>
-                    <p class="wavy-line">〜</p>
-                    <input class="applied-form__input" type="text" value="{{ $application->new_break_out }}" readonly>
-                </div>
-            </div>
-            <div class="applied-form__group">
-                <p class="applied-form__header">休憩2</p>
-                <div class="applied-form__input-group">
-                    <input class="applied-form__input" type="text" value="{{ $application->new_break2_in }}" readonly>
-                    <p class="wavy-line">〜</p>
-                    <input class="applied-form__input" type="text" value="{{ $application->new_break2_out }}" readonly>
+                <div class="applied-form__input-wrapper">
+                    @foreach($application->proposalBreaks as $break)
+                        <div class="applied-form__input-group">
+                            <input class="applied-form__input readonly" type="text" name="new_break_in[]"
+                                value="{{ \Carbon\Carbon::parse($break->break_in)->format('H:i') }}" readonly>
+                            <p>〜</p>
+                            <input class="applied-form__input readonly" type="text" name="new_break_out[]"
+                                value="{{ \Carbon\Carbon::parse($break->break_out)->format('H:i') }}" readonly>
+                        </div>
+                    @endforeach
                 </div>
             </div>
             <div class="applied-form__group">
