@@ -257,6 +257,7 @@ class UserController extends Controller
                 'date'          => $application->new_date,
                 'clock_in'      => $application->new_clock_in,
                 'clock_out'     => $application->new_clock_out,
+                'comment'       => $application->comment,
                 'approval_status' => $application->approval_status,
             ];
         });
@@ -265,5 +266,39 @@ class UserController extends Controller
             'user/user-application-list',
             compact('user', 'formattedApplications')
         );
+    }
+
+    public function applicationDetail($id)
+    {
+        $user = Auth::user();
+        $application = Application::findOrFail($id);
+
+        $proposalBreaks = $application->proposalBreaks()->get()->map(function ($b) {
+            return [
+                'break_in'  => $b->break_in ? Carbon::parse($b->break_in)->format('H:i') : null,
+                'break_out' => $b->break_out ? Carbon::parse($b->break_out)->format('H:i') : null,
+            ];
+        })->toArray();
+
+        $data = [
+            'id'            => $application->id,
+            'year'          => $application->new_date
+                                ? Carbon::parse($application->new_date)->format('Y年')
+                                : null,
+            'date'          => $application->new_date
+                                ? Carbon::parse($application->new_date)->format('m月d日')
+                                : null,
+            'clock_in'      => $application->new_clock_in
+                                ? Carbon::parse($application->new_clock_in)->format('H:i')
+                                : null,
+            'clock_out'     => $application->new_clock_out
+                                ? Carbon::parse($application->new_clock_out)->format('H:i')
+                                : null,
+            'breaks'        => $proposalBreaks,
+            'comment'       => $application->comment,
+            'application'   => $application,
+        ];
+
+        return view('user/user-detail', compact('user', 'data'));
     }
 }
