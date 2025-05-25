@@ -26,6 +26,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/attendance', [UserController::class, 'index']);
     Route::post('/attendance', [UserController::class, 'attendance']);
     Route::get('/attendance/list', [UserController::class, 'list']);
+    Route::get('/application/{id}', [UserController::class, 'applicationDetail']);
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -72,6 +73,7 @@ Route::get('/admin/login', [AuthController::class, 'adminLogin']);
 Route::post('/admin/login', [AuthController::class, 'adminDoLogin']);
 
 Route::post('/login', [AuthController::class, 'doLogin']);
+Route::post('/logout', [AuthController::class, 'doLogout']);
 Route::post('/register', [AuthController::class, 'store']);
 Route::get('/email/verify', function () {
     return view('auth.verify-email');
