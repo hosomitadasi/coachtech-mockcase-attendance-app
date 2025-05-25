@@ -5,13 +5,6 @@
 @endsection
 
 @section('content')
-    @if($errors->any())
-        <ul class="text-red-600">
-            @foreach($errors->all() as $message)
-                <li>{{ $message }}</li>
-            @endforeach
-        </ul>
-    @endif
     <div class="detail__content">
         <div class="detail__header">
             <h2 class="content__header--item">勤怠詳細</h2>
@@ -78,8 +71,18 @@
                     <div class="error-message">
                         <div></div>
                         <div class="error-message__item">
-                            @error('new_break_in[]') {{ $message }} @enderror
-                            @error('new_break_out[]') {{ $message }} @enderror
+                            @foreach ($errors->get('new_break_in.*') as $messages)
+                                @foreach ((array) $messages as $message)
+                                    <p>{{ $message }}</p>
+                                @endforeach
+                            @endforeach
+
+                            {{-- 休憩終了のエラー --}}
+                            @foreach ($errors->get('new_break_out.*') as $messages)
+                                @foreach ((array) $messages as $message)
+                                    <p>{{ $message }}</p>
+                                @endforeach
+                            @endforeach
                         </div>
                     </div>
 
