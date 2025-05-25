@@ -12,7 +12,7 @@
     <div class="content__menu">
         <a class="previous-month" href="?date={{ $previousMonth }}">前月</a>
         <p class="current-month">{{ $date->format('Y-m') }}</p>
-        @if ($date->lt(\Carbon\Carbon::create(2024, 12, 1)))
+        @if ($date->lt(\Carbon\Carbon::now()))
         <a class="next-month" href="?date={{ $nextMonth }}">翌月</a>
         @else
         <div class="next-month-placeholder"></div>
