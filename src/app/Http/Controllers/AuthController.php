@@ -80,6 +80,12 @@ class AuthController extends Controller
     ]);
     }
 
+    public function doLogout()
+    {
+        Auth::logout();
+        return redirect('/login');
+    }
+
     protected function sendVerificationEmail($user)
     {
         $user->sendEmailVerificationNotification();

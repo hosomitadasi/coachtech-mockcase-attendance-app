@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\AttendanceRecord;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Application;
-use Carbon\Carbon;
+use App\Models\ApplicationBreak;
+use App\Models\AttendanceRecord;
+use App\Models\AttendanceBreak;
 use App\Http\Requests\CorrectionRequest;
 
 class UserController extends Controller
@@ -17,8 +19,11 @@ class UserController extends Controller
         $user = Auth::user();
 
         if ($user->attendance_status === '退勤済') {
-            $attendance = AttendanceRecord::where('user_id', $user->id)->whereDate('date', now()->format('Y-m-d'))->first();
-            if (!$attendance) {
+            $attendance = AttendanceRecord::where('user_id', $user->id)
+                ->whereDate('date', now()->format('Y-m-d'))
+                ->first();
+
+            if (! $attendance) {
                 $user->attendance_status = '勤務外';
                 $user->save();
             }
@@ -26,19 +31,17 @@ class UserController extends Controller
 
         $now = new \DateTime();
         $week = [
-            0 => '日',
-            1 => '月',
-            2 => '火',
-            3 => '水',
-            4 => '木',
-            5 => '金',
-            6 => '土',
+            0 => '日', 1 => '月', 2 => '火', 3 => '水',
+            4 => '木', 5 => '金', 6 => '土',
         ];
-        $weekdayIndex = $now->format('w');
-        $weekday = $week[$weekdayIndex];
-        $formattedDate = $now->format('Y年m月d日(' . $weekday . ')');
+        $weekday = $week[$now->format('w')];
+        $formattedDate = $now->format("Y年m月d日({$weekday})");
         $formattedTime = $now->format('H:i');
-        return view('user/attendance-register', compact('formattedDate', 'formattedTime', 'user'));
+
+        return view(
+            'user/attendance-register',
+            compact('formattedDate', 'formattedTime', 'user')
+        );
     }
 
     public function attendance(Request $request)
@@ -46,185 +49,256 @@ class UserController extends Controller
         $user = Auth::user();
         $action = $request->input('action');
 
-        if ($user->attendance_status !== '勤務外') {
-            $attendance = AttendanceRecord::where('user_id', $user->id)->whereDate('date', now()->format('Y-m-d'))->first();
-        }
+        $attendance = AttendanceRecord::where('user_id', $user->id)
+            ->whereDate('date', now()->toDateString())
+            ->first();
 
-        if ($user->attendance_status === '退勤済')
-        {
-            $attendance = AttendanceRecord::where('user_id', $user->id)->whereDate('date', now()->format('Y-m-d'))->first();
-            if (!$attendance) {
-                $user->attendance_status = '勤務外';
-                $user->save();
-            }
+        if (in_array($action, ['break_in','break_out','clock_out']) && ! $attendance) {
+            return redirect('/attendance')->withErrors('出勤していません。先に「出勤」をしてください。');
         }
 
         if ($action === 'clock_in' && $user->attendance_status === '勤務外') {
-            $attendance = new AttendanceRecord();
-            $attendance->user_id = $user->id;
-            $attendance->date = now();
-            $attendance->clock_in = Carbon::now()->format('H:i');
+            $attendance             = new AttendanceRecord();
+            $attendance->user_id    = $user->id;
+            $attendance->date       = now();
+            $attendance->clock_in   = Carbon::now();
             $attendance->save();
 
             $user->attendance_status = '出勤中';
             $user->save();
-        } elseif ($action === "clock_out" && $user->attendance_status === '出勤中') {
-            $attendance->clock_out = Carbon::now()->format('H:i');
 
-            $clockIn = Carbon::parse($attendance->clock_in);
+        } elseif ($action === 'break_in' && $user->attendance_status === '出勤中') {
+            $attendance->breaks()->create([
+                'break_in' => Carbon::now(),
+            ]);
+
+            $user->attendance_status = '休憩中';
+            $user->save();
+
+        } elseif ($action === 'break_out' && $user->attendance_status === '休憩中') {
+            $currentBreak = $attendance
+                ->breaks()
+                ->whereNull('break_out')
+                ->latest()
+                ->first();
+
+            if ($currentBreak) {
+                $currentBreak->break_out = Carbon::now();
+                $currentBreak->save();
+            }
+
+            $user->attendance_status = '出勤中';
+            $user->save();
+
+        } elseif ($action === 'clock_out' && $user->attendance_status === '出勤中') {
+            $attendance->clock_out = Carbon::now();
+
+            $clockIn  = Carbon::parse($attendance->clock_in);
             $clockOut = Carbon::parse($attendance->clock_out);
 
             $totalBreakTime = 0;
-            if ($attendance->break_in && $attendance->break_out) {
-                $breakIn = Carbon::parse($attendance->break_in);
-                $breakOut = Carbon::parse($attendance->break_out);
-                $totalBreakTime += $breakIn->diffInMinutes($breakOut);
+            foreach ($attendance->breaks as $b) {
+                if ($b->break_in && $b->break_out) {
+                    $totalBreakTime +=
+                        Carbon::parse($b->break_in)
+                              ->diffInMinutes(Carbon::parse($b->break_out));
+                }
             }
 
-            if ($attendance->break2_in && $attendance->break2_out) {
-                $break2In = Carbon::parse($attendance->break2_in);
-                $break2Out = Carbon::parse($attendance->break2_out);
-                $totalBreakTime += $break2In->diffInMinutes($break2Out);
-            }
+            $attendance->total_break_time = sprintf(
+                '%02d:%02d',
+                floor($totalBreakTime/60),
+                $totalBreakTime%60
+            );
 
-            $totalBreakHours = floor($totalBreakTime / 60);$totalBreakMinutes = $totalBreakTime % 60;
-            $attendance->total_break_time = sprintf('%02d:%02d', $totalBreakHours, $totalBreakMinutes);
-
-            $totalWorkedMinutes = $clockIn->diffInMinutes($clockOut) - $totalBreakTime;
-
-            $hours = floor($totalWorkedMinutes / 60);
-            $minutes = $totalWorkedMinutes % 60;
-
-            $attendance->total_time = sprintf('%02d:%02d', $hours, $minutes);
+            $workedMins = $clockIn->diffInMinutes($clockOut) - $totalBreakTime;
+            $attendance->total_time = sprintf(
+                '%02d:%02d',
+                floor($workedMins/60),
+                $workedMins%60
+            );
 
             $attendance->save();
 
             $user->attendance_status = '退勤済';
             $user->save();
-        } elseif ($action === 'break_in' && $user->attendance_status === '出勤中') {
-            if (!$attendance->break_in) {
-                $attendance->break_in = Carbon::now()->format('H:i');
-            } elseif (!$attendance->break2_in) {
-                $attendance->break2_in = Carbon::now()->format('H:i');
-            }
-            $attendance->save();
-
-            $user->attendance_status = '休憩中';
-            $user->save();
-        } elseif ($action === 'break_out' && $user->attendance_status === '休憩中') {
-            if (!$attendance->break_out) {
-                $attendance->break_out = Carbon::now()->format('H:i');
-            } elseif (!$attendance->break2_out) {
-                $attendance->break2_out = Carbon::now()->format('H:i');
-            }
-            $attendance->save();
-
-            $user->attendance_status = '出勤中';
-            $user->save();
         }
+
         return redirect('/attendance');
     }
 
     public function list(Request $request)
     {
         $user = Auth::user();
-        $date = Carbon::parse($request->query('date', Carbon::now()));
+        $date = Carbon::parse($request->query('date', now()));
 
         $startOfMonth = $date->copy()->startOfMonth();
-        $endOfMonth = $date->copy()->endOfMonth();
+        $endOfMonth   = $date->copy()->endOfMonth();
 
-        $attendanceRecords = AttendanceRecord::where('user_id', $user->id)->whereBetween('date', [$startOfMonth, $endOfMonth])->get();
+        $attendanceRecords = AttendanceRecord::where('user_id', $user->id)
+            ->whereBetween('date', [$startOfMonth, $endOfMonth])
+            ->get();
 
-        $formattedAttendanceRecords = $attendanceRecords->map(function ($attendance) {
-            $weekdays = ['日', '月', '火', '水', '木', '金', '土'];
-            $date = Carbon::parse($attendance->date);
-            $weekday = $weekdays[$date->dayOfWeek];
+        $formatted = $attendanceRecords->map(function ($rec) {
+            $weekdays = ['日','月','火','水','木','金','土'];
+            $d = Carbon::parse($rec->date);
             return [
-                'id' => $attendance->id,
-                'date' => $date->format('m/d') . "($weekday)",
-                'clock_in' => $attendance->clock_in ? Carbon::parse($attendance->clock_in)->format('H:i') : null,
-                'clock_out' => $attendance->clock_out ? Carbon::parse($attendance->clock_out)->format('H:i') : null,
-                'total_time' => $attendance->total_time,
-                'total_break_time' => $attendance->total_break_time
+                'id'               => $rec->id,
+                'date'             => $d->format('m/d') . "({$weekdays[$d->dayOfWeek]})",
+                'clock_in'         => $rec->clock_in  ? Carbon::parse($rec->clock_in)->format('H:i') : null,
+                'clock_out'        => $rec->clock_out ? Carbon::parse($rec->clock_out)->format('H:i') : null,
+                'total_time'       => $rec->total_time,
+                'total_break_time' => $rec->total_break_time,
             ];
         });
 
-        return view('user/user-attendance-list',
-        [
-            'formattedAttendanceRecords' => $formattedAttendanceRecords,
-            'date' => $date,
-            'nextMonth' => $date->copy()->addMonth()->format('Y-m'),
-            'previousMonth' => $date->copy()->subMonth()->format('Y-m'),
+        return view('user/user-attendance-list', [
+            'formattedAttendanceRecords' => $formatted,
+            'date'      => $date,
+            'nextMonth'=> $date->copy()->addMonth()->format('Y-m'),
+            'previousMonth'=> $date->copy()->subMonth()->format('Y-m'),
         ]);
     }
 
     public function detail($id)
     {
-        $attendanceRecords = AttendanceRecord::findOrFail($id);
-        $user = User::findOrFail($attendanceRecords->user_id);
+        $attendanceRecord = AttendanceRecord::findOrFail($id);
+        $user = Auth::user();
 
-        $application = Application::where('attendance_record_id', $attendanceRecords->id)->where('approval_status', '承認待ち')->get();
+        // マスター休憩
+        $masterBreaks = $attendanceRecord->breaks()->get()->map(function ($b) {
+            return [
+                'break_in'  => $b->break_in ? Carbon::parse($b->break_in)->format('H:i') : null,
+                'break_out' => $b->break_out ? Carbon::parse($b->break_out)->format('H:i') : null,
+            ];
+        })->toArray();
 
-        $applicationData = Application::where('attendance_record_id', $attendanceRecords->id)->first();
+        // 未承認申請
+        $application = Application::where('attendance_record_id', $id)
+            ->where('approval_status', '承認待ち')
+            ->first();
+        $proposal = [];
+        if ($application) {
+            $proposal = $application->proposalBreaks()->get()->map(function ($b) {
+                return [
+                    'break_in'  => Carbon::parse($b->break_in)->format('H:i'),
+                    'break_out' => $b->break_out ? Carbon::parse($b->break_out)->format('H:i') : null,
+                ];
+            })->toArray();
+        }
 
-        $attendanceRecord = [
-            'application' => $attendanceRecords->application,
-            'id' => $attendanceRecords->id,
-            'year' => $attendanceRecords->date ? Carbon::parse($attendanceRecords->date)->format('Y年') : null,
-            'date' => $attendanceRecords->date ? Carbon::parse($attendanceRecords->date)->format('m月d日') : null,
-            'clock_in' => $attendanceRecords->clock_in ? Carbon::parse($attendanceRecords->clock_in)->format('H:i') : null,
-            'clock_out' => $attendanceRecords->clock_out ? Carbon::parse($attendanceRecords->clock_out)->format('H:i') : null,
-            'break_in' => $attendanceRecords->break_in ? Carbon::parse($attendanceRecords->break_in)->format('H:i') : null,
-            'break_out' => $attendanceRecords->break_out ? Carbon::parse($attendanceRecords->break_out)->format('H:i') : null,
-            'break2_in' => $attendanceRecords->break2_in ? Carbon::parse($attendanceRecords->break2_in)->format('H:i') : null,
-            'break2_out' => $attendanceRecords->break2_out ? Carbon::parse($attendanceRecords->break2_out)->format('H:i') : null,
-            'comment' => $attendanceRecords->comment,
+        $data = [
+            'id'            => $attendanceRecord->id,
+            'year'          => $attendanceRecord->date
+                                ? Carbon::parse($attendanceRecord->date)->format('Y年')
+                                : null,
+            'date'          => $attendanceRecord->date
+                                ? Carbon::parse($attendanceRecord->date)->format('m月d日')
+                                : null,
+            'clock_in'      => $attendanceRecord->clock_in
+                                ? Carbon::parse($attendanceRecord->clock_in)->format('H:i')
+                                : null,
+            'clock_out'     => $attendanceRecord->clock_out
+                                ? Carbon::parse($attendanceRecord->clock_out)->format('H:i')
+                                : null,
+            'breaks'        => $masterBreaks,
+            'proposal_breaks'=> $proposal,
+            'comment'       => $attendanceRecord->comment,
+            'application'   => $application,
         ];
 
-        return view('user/user-detail', compact('user', 'attendanceRecord','application', 'applicationData'));
+        return view('user/user-detail', compact('user', 'data'));
     }
 
     public function amendmentApplication(CorrectionRequest $request, $id)
     {
         $user = Auth::user();
-        $attendance = AttendanceRecord::findOrFail($id);
+        $application = Application::create([
+            'user_id'              => $user->id,
+            'attendance_record_id' => $id,
+            'approval_status'      => '承認待ち',
+            'application_date'     => now(),
+            'new_date'             => Carbon::createFromFormat('n月j日', $request->new_date)
+                                        ->year(now()->year)
+                                        ->format('Y-m-d'),
+            'new_clock_in'         => Carbon::parse($request->new_clock_in)->format('H:i'),
+            'new_clock_out'        => Carbon::parse($request->new_clock_out)->format('H:i'),
+            'comment'              => $request->comment,
+        ]);
 
-        $amendment = new Application();
-        $amendment->user_id = $user->id;
-        $amendment->attendance_record_id = $attendance->id;
-        $amendment->approval_status = "承認待ち";
-        $amendment->application_date = now();
-        $dateString = $request->new_date;
-        $parsedDate = Carbon::createFromFormat('n月j日', $dateString)->year(now()->year)->format('Y-m-d');
-        $amendment->new_date = $parsedDate;
-        $amendment->new_clock_in = Carbon::parse($request->new_clock_in)->format('H:i');
-        $amendment->new_clock_out = Carbon::parse($request->new_clock_out)->format('H:i');
-        if ($request->new_break_in) {
-            $amendment->new_break_in = Carbon::parse($request->new_break_in)->format('H:i');
+        // 申請用休憩を作成
+        $rawIns  = (array) $request->input('new_break_in', []);
+        $rawOuts = (array) $request->input('new_break_out', []);
+        $pairs = [];
+        foreach (array_values(array_filter($rawIns)) as $i => $in) {
+            $out = array_values(array_filter($rawOuts))[$i] ?? null;
+            $pairs[] = [
+                'break_in'  => Carbon::parse($in)->format('H:i'),
+                'break_out' => $out ? Carbon::parse($out)->format('H:i') : null,
+            ];
         }
-        if ($request->new_break_out) {
-            $amendment->new_break_out = Carbon::parse($request->new_break_out)->format('H:i');
-        }
-        if ($request->new_break2_in) {
-            $amendment->new_break2_in = Carbon::parse($request->new_break2_in)->format('H:i');
-        }
-        if ($request->new_break2_out) {
-            $amendment->new_break2_out = Carbon::parse($request->new_break2_out)->format('H:i');
-        }
-        $amendment->comment = $request->comment;
-        $amendment->save();
-
+        $application->proposalBreaks()->createMany($pairs);
 
         return redirect('/stamp_correction_request/list');
     }
 
     public function applicationList()
     {
-        $user = Auth::user();
+        $user         = Auth::user();
         $applications = Application::where('user_id', $user->id)->get();
-        $attendance = AttendanceRecord::get('id');
 
-        return view('user/user-application-list', compact('user', 'applications', 'attendance'));
+        // 一覧表示のために必要なデータを取得
+        $formattedApplications = $applications->map(function ($application) {
+            return [
+                'id'            => $application->id,
+                'application_date' => $application->application_date
+                                ? Carbon::parse($application->application_date)->format('Y/m/d')
+                                : null,
+                'date'          => $application->new_date,
+                'clock_in'      => $application->new_clock_in,
+                'clock_out'     => $application->new_clock_out,
+                'comment'       => $application->comment,
+                'approval_status' => $application->approval_status,
+            ];
+        });
+
+        return view(
+            'user/user-application-list',
+            compact('user', 'formattedApplications')
+        );
+    }
+
+    public function applicationDetail($id)
+    {
+        $user = Auth::user();
+        $application = Application::findOrFail($id);
+
+        $proposalBreaks = $application->proposalBreaks()->get()->map(function ($b) {
+            return [
+                'break_in'  => $b->break_in ? Carbon::parse($b->break_in)->format('H:i') : null,
+                'break_out' => $b->break_out ? Carbon::parse($b->break_out)->format('H:i') : null,
+            ];
+        })->toArray();
+
+        $data = [
+            'id'            => $application->id,
+            'year'          => $application->new_date
+                                ? Carbon::parse($application->new_date)->format('Y年')
+                                : null,
+            'date'          => $application->new_date
+                                ? Carbon::parse($application->new_date)->format('m月d日')
+                                : null,
+            'clock_in'      => $application->new_clock_in
+                                ? Carbon::parse($application->new_clock_in)->format('H:i')
+                                : null,
+            'clock_out'     => $application->new_clock_out
+                                ? Carbon::parse($application->new_clock_out)->format('H:i')
+                                : null,
+            'breaks'        => $proposalBreaks,
+            'comment'       => $application->comment,
+            'application'   => $application,
+        ];
+
+        return view('user/user-detail', compact('user', 'data'));
     }
 }
-

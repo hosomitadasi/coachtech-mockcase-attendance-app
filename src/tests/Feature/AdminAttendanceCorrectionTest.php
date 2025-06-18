@@ -54,7 +54,7 @@ class AdminAttendanceCorrectionTest extends TestCase
             }
         }
 
-        $response = $this->get('/stamp_correction_request/list?tab=tab1');
+        $response = $this->get('/stamp_correction_request/list?tab=tab2');
 
         foreach ($applications as $application) {
             $response->assertSee($application->comment);

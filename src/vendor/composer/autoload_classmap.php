@@ -32,6 +32,8 @@ return array(
     'App\\Http\\Requests\\LoginRequest' => $baseDir . '/app/Http/Requests/LoginRequest.php',
     'App\\Http\\Requests\\RegisterRequest' => $baseDir . '/app/Http/Requests/RegisterRequest.php',
     'App\\Models\\Application' => $baseDir . '/app/Models/Application.php',
+    'App\\Models\\ApplicationBreak' => $baseDir . '/app/Models/ApplicationBreak.php',
+    'App\\Models\\AttendanceBreak' => $baseDir . '/app/Models/AttendanceBreak.php',
     'App\\Models\\AttendanceRecord' => $baseDir . '/app/Models/AttendanceRecord.php',
     'App\\Models\\User' => $baseDir . '/app/Models/User.php',
     'App\\Providers\\AppServiceProvider' => $baseDir . '/app/Providers/AppServiceProvider.php',

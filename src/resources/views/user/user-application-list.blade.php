@@ -36,26 +36,26 @@
                         <p class="table__header--item">詳細</p>
                     </th>
                 </tr>
-                @foreach ($applications as $application)
-                @if ($application->approval_status === '承認待ち')
+                @foreach ($formattedApplications as $application)
+                @if ($application['approval_status'] === '承認待ち')
                 <tr class="table__row">
                     <td class="table__description">
-                        <p class="table__description--item">{{ $application->approval_status }}</p>
+                        <p class="table__description--item">{{ $application['approval_status'] }}</p>
                     </td>
                     <td class="table__description">
-                        <p class="table__description--item">{{ $application->user->name }}</p>
+                        <p class="table__description--item">{{ $user->name }}</p>
                     </td>
                     <td class="table__description">
-                        <p class="table__description--item">{{ $application->AttendanceRecord->date->format('Y-m-d') }}</p>
+                        <p class="table__description--item">{{ $application['date'] }}</p>
                     </td>
                     <td class="table__description">
-                        <p class="table__description--item">{{ $application->comment }}</p>
+                        <p class="table__description--item">{{ $application['comment'] ?? 'なし' }}</p>
                     </td>
                     <td class="table__description">
-                        <p class="table__description--item">{{ $application->application_date }}</p>
+                        <p class="table__description--item">{{ $application['application_date'] }}</p>
                     </td>
                     <td class="table__description">
-                        <a class="table__item--detail-link" href="{{ url('/attendance/' . $application->attendance_record_id) }}">詳細</a>
+                        <a class="table__item--detail-link" href="{{ url('/application/' . $application['id']) }}">詳細</a>
                     </td>
                 </tr>
                 @endif
@@ -84,26 +84,26 @@
                         <p class="table__header--item">詳細</p>
                     </th>
                 </tr>
-                @foreach ($applications as $application)
-                @if ($application->approval_status === '承認済み')
+                @foreach ($formattedApplications as $application)
+                @if ($application['approval_status'] === '承認済み')
                 <tr class="table__row">
                     <td class="table__description">
-                        <p class="table__description--item">{{ $application->approval_status }}</p>
+                        <p class="table__description--item">{{ $application['approval_status'] }}</p>
                     </td>
                     <td class="table__description">
-                        <p class="table__description--item">{{ $application->user->name }}</p>
+                        <p class="table__description--item">{{ $user->name }}</p>
                     </td>
                     <td class="table__description">
-                        <p class="table__description--item">{{ $application->AttendanceRecord->date->format('Y-m-d') }}</p>
+                        <p class="table__description--item">{{ $application['date'] }}</p>
                     </td>
                     <td class="table__description">
-                        <p class="table__description--item">{{ $application->comment }}</p>
+                        <p class="table__description--item">{{ $application['comment'] ?? 'なし' }}</p>
                     </td>
                     <td class="table__description">
-                        <p class="table__description--item">{{ $application->application_date }}</p>
+                        <p class="table__description--item">{{ $application['application_date'] }}</p>
                     </td>
                     <td class="table__description">
-                        <a class="table__item--detail-link" href="{{ url('/attendance/' . $application->attendance_record_id) }}">詳細</a>
+                        <a class="table__item--detail-link" href="{{ url('/application/' . $application['id']) }}">詳細</a>
                     </td>
                 </tr>
                 @endif

@@ -25,6 +25,8 @@ class UserAttendanceTest extends TestCase
     {
         $user = User::all()->random();
         $this->actingAs($user);
+        $this->post('/attendance', ['action' => 'clock_in']);
+        $this->post('/attendance', ['action' => 'clock_out']);
 
         $response = $this->get('/attendance/list');
 

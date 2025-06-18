@@ -82,7 +82,7 @@ class UserAttendanceDetailTest extends TestCase
         $response = $this->get('/attendance/' . $attendanceRecord->id);
 
         $response->assertStatus(200);
-        $response->assertSee(Carbon::parse($attendanceRecord->break_in)->format('H:i'));
-        $response->assertSee(Carbon::parse($attendanceRecord->break_out)->format('H:i'));
+        $response->assertSee(Carbon::parse($attendanceRecord->breaks[0]->break_in)->format('H:i'));
+        $response->assertSee(Carbon::parse($attendanceRecord->breaks[0]->break_out)->format('H:i'));
     }
 }

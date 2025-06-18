@@ -58,13 +58,13 @@ class UserAttendanceCorrectionTest extends TestCase
         $response = $this->post('/attendance/' . $attendanceRecord->id, [
             'new_clock_in' => '9:00',
             'new_clock_out' => '15:00',
-            'new_break_in' => '16:00',
-            'new_break_out' => '15:30',
+            'new_break_in' => ['16:00'],
+            'new_break_out' => ['15:30'],
             'comment' => 'Test comment'
         ]);
 
-        $response->assertSessionHasErrors(['new_break_in']);
-        $this->assertContains('休憩時間が勤務時間外です。', session('errors')->get('new_break_in'));
+        $response->assertSessionHasErrors(['new_break_in.0']);
+        $this->assertContains('休憩時間が勤務時間外です。', session('errors')->get('new_break_in.0'));
     }
 
     /** @test */
@@ -82,13 +82,13 @@ class UserAttendanceCorrectionTest extends TestCase
         $response = $this->post('/attendance/' . $attendanceRecord->id, [
             'new_clock_in' => '9:00',
             'new_clock_out' => '15:00',
-            'new_break_in' => '10:00',
-            'new_break_out' => '16:00',
+            'new_break_in' => ['10:00'],
+            'new_break_out' => ['16:00'],
             'comment' => 'Test comment'
         ]);
 
-        $response->assertSessionHasErrors(['new_break_out']);
-        $this->assertContains('休憩時間が勤務時間外です。', session('errors')->get('new_break_out'));
+        $response->assertSessionHasErrors(['new_break_out.0']);
+        $this->assertContains('休憩時間が勤務時間外です。', session('errors')->get('new_break_out.0'));
     }
 
     /** @test */

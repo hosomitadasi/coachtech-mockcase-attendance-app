@@ -105,7 +105,7 @@ class BreakTest extends TestCase
         $this->assertNotNull($attendanceRecord);
         $this->assertEquals(now()->format('Y-m-d'), $attendanceRecord->date->format('Y-m-d'));
 
-        $this->assertNotNull($attendanceRecord->break_in);
-        $this->assertNotNull($attendanceRecord->break_out);
+        $this->assertNotNull($attendanceRecord->breaks[0]->break_in);
+        $this->assertNotNull($attendanceRecord->breaks[0]->break_out);
     }
 }

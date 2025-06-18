@@ -17,10 +17,6 @@ class Application extends Model
         'new_date',
         'new_clock_in',
         'new_clock_out',
-        'new_break_in',
-        'new_break_out',
-        'new_break2_in',
-        'new_break2_out',
         'comment'
     ];
 
@@ -32,5 +28,10 @@ class Application extends Model
     public function attendanceRecord()
     {
         return $this->belongsTo(AttendanceRecord::class);
+    }
+
+    public function proposalBreaks()
+    {
+        return $this->hasMany(ApplicationBreak::class);
     }
 }
