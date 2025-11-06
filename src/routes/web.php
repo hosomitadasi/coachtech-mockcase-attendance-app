@@ -24,19 +24,31 @@ use App\Http\Requests\CorrectionRequest;
 
 Route::middleware('auth')->group(function () {
     Route::get('/attendance', [UserController::class, 'index']);
+    // 勤怠打刻画面の表示
     Route::post('/attendance', [UserController::class, 'attendance']);
+    // 勤怠打刻処理
     Route::get('/attendance/list', [UserController::class, 'list']);
+    // 各ユーザーの勤怠一覧の表示
     Route::get('/application/{id}', [UserController::class, 'applicationDetail']);
+    // 修正申請の詳細確認
 });
+// 一般ユーザーの勤怠処理機能
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/admin/attendance/list', [AdminController::class, 'list']);
+    // ある１日の勤怠一覧表示
     Route::get('/admin/staff/list', [AdminController::class, 'staffList']);
+    // 登録されたスタッフの一覧表示
     Route::get('/admin/attendance/staff/{id}', [AdminController::class, 'staffDetailList']);
+    // 各スタッフの月次一覧表示
     Route::post('/admin/logout', [AuthController::class, 'adminLogout']);
+    // 管理者ログアウト機能
     Route::get('/stamp_correction_request/approve/{id}', [AdminController::class, 'approvalShow']);
+    // 修正申請承認画面の表示
     Route::post('/stamp_correction_request/approve/{id}', [AdminController::class, 'approval']);
+    // 承認処理
     Route::post('/export', [AdminController::class, 'export']);
+    // 勤怠データのエクスポート
 });
 
 Route::middleware(['auth', AdminStatusMiddleware::class])->group(function () {

@@ -222,6 +222,7 @@ return array(
     'Database\\Factories\\AttendanceRecordFactory' => $baseDir . '/database/factories/AttendanceRecordFactory.php',
     'Database\\Factories\\UserFactory' => $baseDir . '/database/factories/UserFactory.php',
     'Database\\Seeders\\AttendanceRecordsTableSeeder' => $baseDir . '/database/seeders/AttendanceRecordsTableSeeder.php',
+    'Database\\Seeders\\BreaksTableSeeder' => $baseDir . '/database/seeders/BreaksTableSeeder.php',
     'Database\\Seeders\\DatabaseSeeder' => $baseDir . '/database/seeders/DatabaseSeeder.php',
     'Database\\Seeders\\UsersTableSeeder' => $baseDir . '/database/seeders/UsersTableSeeder.php',
     'DeepCopy\\DeepCopy' => $vendorDir . '/myclabs/deep-copy/src/DeepCopy/DeepCopy.php',

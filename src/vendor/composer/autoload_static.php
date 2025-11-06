@@ -190,9 +190,9 @@ class ComposerStaticInitc61ff82cbf0142a401a48a8161e1595a
         ),
         'phpDocumentor\\Reflection\\' => 
         array (
-            0 => __DIR__ . '/..' . '/phpdocumentor/reflection-docblock/src',
-            1 => __DIR__ . '/..' . '/phpdocumentor/type-resolver/src',
-            2 => __DIR__ . '/..' . '/phpdocumentor/reflection-common/src',
+            0 => __DIR__ . '/..' . '/phpdocumentor/reflection-common/src',
+            1 => __DIR__ . '/..' . '/phpdocumentor/reflection-docblock/src',
+            2 => __DIR__ . '/..' . '/phpdocumentor/type-resolver/src',
         ),
         'Whoops\\' => 
         array (
@@ -757,6 +757,7 @@ class ComposerStaticInitc61ff82cbf0142a401a48a8161e1595a
         'Database\\Factories\\AttendanceRecordFactory' => __DIR__ . '/../..' . '/database/factories/AttendanceRecordFactory.php',
         'Database\\Factories\\UserFactory' => __DIR__ . '/../..' . '/database/factories/UserFactory.php',
         'Database\\Seeders\\AttendanceRecordsTableSeeder' => __DIR__ . '/../..' . '/database/seeders/AttendanceRecordsTableSeeder.php',
+        'Database\\Seeders\\BreaksTableSeeder' => __DIR__ . '/../..' . '/database/seeders/BreaksTableSeeder.php',
         'Database\\Seeders\\DatabaseSeeder' => __DIR__ . '/../..' . '/database/seeders/DatabaseSeeder.php',
         'Database\\Seeders\\UsersTableSeeder' => __DIR__ . '/../..' . '/database/seeders/UsersTableSeeder.php',
         'DeepCopy\\DeepCopy' => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy/DeepCopy.php',

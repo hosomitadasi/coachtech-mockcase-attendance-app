@@ -14,8 +14,10 @@ class AdminController extends Controller
     public function list(Request $request)
     {
         $users = User::all();
+        // 変数usersにデータベース「User」のデータを全て取得させるようにする。
         $date = Carbon::parse($request->query('date', Carbon::now()));
         $attendanceRecords = AttendanceRecord::whereDate('date', $date)->whereIn('user_id', $users->pluck('id'))->get();
+        
 
         return view('admin/admin-attendance-list', [
             'users' => $users,
@@ -25,6 +27,7 @@ class AdminController extends Controller
             'nextDay' => $date->copy()->addDay()->format('Y-m-d'),
         ]);
     }
+    // ある１日の勤怠一覧画面を表示する機能
 
     public function staffList()
     {
