@@ -10,9 +10,11 @@ use Carbon\Carbon;
 class AttendanceRecordFactory extends Factory
 {
     protected $model = AttendanceRecord::class;
+    // このFactoryがどのモデルとデータテーブルを作成するかを指定。今回は勤怠レコードを作成する。
 
     public function definition()
     {
+        // １件分のデータをどう作るかを定義する関数。ここで返した配列が、そのままAttendanceRecode::create([・・・])の中身になる。
         // ユーザーID
         $userIds = User::pluck('id');
         $userId  = $userIds->random();

@@ -10,45 +10,34 @@ use Laravel\Fortify\Http\Controllers\VerifyEmailController;
 use Illuminate\Http\Request;
 use App\Http\Requests\CorrectionRequest;
 
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
-
 Route::middleware('auth')->group(function () {
+    // 一般ユーザーとしてログインしていないと入れないエリア。
     Route::get('/attendance', [UserController::class, 'index']);
-    // 勤怠打刻画面の表示
+    // UserControllerのindexを呼び出し、/attendance「打刻画面」を出力する。
     Route::post('/attendance', [UserController::class, 'attendance']);
-    // 勤怠打刻処理
+    // UserControllerのattendanceを呼び出し。打刻ボタンを押したときの動作処理を実施。
     Route::get('/attendance/list', [UserController::class, 'list']);
-    // 各ユーザーの勤怠一覧の表示
+    // UserControllerのlistを呼び出し、/attendance/list「勤怠一覧画面」を出力する。
     Route::get('/application/{id}', [UserController::class, 'applicationDetail']);
-    // 修正申請の詳細確認
+    // UserControllerのapplicationDetailを呼び出し、/application/{id}「修正一覧画面」を出力する。。
 });
-// 一般ユーザーの勤怠処理機能
 
 Route::middleware(['auth'])->group(function () {
+    // ログインが必要な場所。admin_statusのチェックはまだない。
     Route::get('/admin/attendance/list', [AdminController::class, 'list']);
-    // ある１日の勤怠一覧表示
+    // AdminControllerのlistを呼び出し、/admin/attendance/list「管理者用勤怠一覧画面」を出力する。
     Route::get('/admin/staff/list', [AdminController::class, 'staffList']);
-    // 登録されたスタッフの一覧表示
+    // AdminControllerのstaffListを呼び出し、/admin/staff/list「スタッフ一覧画面」を出力する。
     Route::get('/admin/attendance/staff/{id}', [AdminController::class, 'staffDetailList']);
-    // 各スタッフの月次一覧表示
+    // AdminControllerのstaffDetailListを呼び出し、/admin/attendance/staff/{id}「特定スタッフの勤務履歴画面」を出力する。
     Route::post('/admin/logout', [AuthController::class, 'adminLogout']);
-    // 管理者ログアウト機能
+    // AuthControllerのadminLogoutを呼び出し、ログアウト処理を実施する。
     Route::get('/stamp_correction_request/approve/{id}', [AdminController::class, 'approvalShow']);
-    // 修正申請承認画面の表示
+    // AdminControllerのapprovalShowを呼び出し、/stamp_correction_request/approve/{id}「修正申請の承認画面」を出力する。
     Route::post('/stamp_correction_request/approve/{id}', [AdminController::class, 'approval']);
-    // 承認処理
+    // AdminControllerのapprovalを呼び出し、修正した勤怠情報を承認する処理を実施する。
     Route::post('/export', [AdminController::class, 'export']);
-    // 勤怠データのエクスポート
+    // AdminControllerのexportの呼び出し、CSV などのデータを出力する。
 });
 
 Route::middleware(['auth', AdminStatusMiddleware::class])->group(function () {
@@ -83,10 +72,11 @@ Route::middleware(['auth', AdminStatusMiddleware::class])->group(function () {
 
 Route::get('/admin/login', [AuthController::class, 'adminLogin']);
 Route::post('/admin/login', [AuthController::class, 'adminDoLogin']);
-
 Route::post('/login', [AuthController::class, 'doLogin']);
 Route::post('/logout', [AuthController::class, 'doLogout']);
 Route::post('/register', [AuthController::class, 'store']);
+// それぞれログイン、会員登録、ログアウトの処理を実施する。
+
 Route::get('/email/verify', function () {
     return view('auth.verify-email');
 })->middleware(['auth'])->name('verification.notice');
