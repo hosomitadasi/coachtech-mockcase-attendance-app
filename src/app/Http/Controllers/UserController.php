@@ -17,80 +17,121 @@ class UserController extends Controller
     public function index()
     {
         $user = Auth::user();
+        // 今ログインしているユーザーの情報を取得し$userに入れる。
 
         if ($user->attendance_status === '退勤済') {
+            // ログイン中のユーザーの状態が「退勤中」なら、次の処理を実行。
             $attendance = AttendanceRecord::where('user_id', $user->id)
                 ->whereDate('date', now()->format('Y-m-d'))
                 ->first();
+            // 今日の勤怠データがあるか検索
+            // AttendanceRecord::where('user_id', $user->id)で勤怠テーブルから、ログインしたユーザーの勤怠を探す準備
+            // whereDate('date', now()->format('Y-m-d'))で巨の日付の勤怠データだけに絞る。
+            // firstで最初の１件（今日の勤怠）を取得する。
+            // 上記処理が完了したら結果を$attendanceへ格納する。
 
             if (! $attendance) {
                 $user->attendance_status = '勤務外';
                 $user->save();
             }
+            // $attendanceがnullなら状態を「勤務外」に変更し、データベースへ保存する。
         }
 
         $now = new \DateTime();
+        // 現在の日時をまとめたものを作成し、$nowに保存。
+
         $week = [
             0 => '日', 1 => '月', 2 => '火', 3 => '水',
             4 => '木', 5 => '金', 6 => '土',
         ];
+        // 0～6を日本語の曜日に変換するための配列。まとめて$weekに格納する。
         $weekday = $week[$now->format('w')];
+        // 今日の曜日番号を取得しweekdayに格納する。$now->format('w')が今日の曜日番号であり、$week［］で日本語の曜日を取得する。
         $formattedDate = $now->format("Y年m月d日({$weekday})");
+        // 今日の日付を表示用に作り直し、$formattedDateに格納する。{$weekday}で先ほど定義した曜日を表示できるようになる。
         $formattedTime = $now->format('H:i');
+        // 現在時刻の内、時間と分だけ取り出す。
 
         return view(
             'user/attendance-register',
             compact('formattedDate', 'formattedTime', 'user')
         );
+        // viewへ今日の日付（$formattedDate）と時間（formattedTime）、ログインしているユーザー（$user）の情報を渡す。
     }
 
     public function attendance(Request $request)
     {
+        // ブラウザ上でどのボタンを押したかを受け取る入口。$requestの中にaction=clock_inなどの値が入ってくる。
         $user = Auth::user();
+        // ここで現在ログインしているユーザーの情報をAuthデータベースから取得し$userに格納している。
         $action = $request->input('action');
+        // フォームの<button name="action" value="clock_in"> の value を取り出す。どのボタンが押されたか知るために使う。
 
         $attendance = AttendanceRecord::where('user_id', $user->id)
             ->whereDate('date', now()->toDateString())
             ->first();
+        // AttendanceRecord::where('user_id', $user->id)：user_idはattendance_recordsテーブルのカラム名、$user->idは現在ログインしているユーザーのID。ここからデータベースAttendanceRecordの中でuser_id カラムと、ログイン中のユーザーの id が一致するデータだけを取得し$attendanceへ入れることを表す
+        // whereDate('date', now()->toDateString())：whereDate('date', ...)がdate（出勤日）カラムの日付だけに注目して絞り込みをすること、now()->toDateString()が今日の日付を文字列で返すこと。ここからdateが今日の日付のデータだけを取得するということを表す。
+        // first()：条件に合うデータを１件だけ取得する。見つからない場合はnullを返す。
 
         if (in_array($action, ['break_in','break_out','clock_out']) && ! $attendance) {
             return redirect('/attendance')->withErrors('出勤していません。先に「出勤」をしてください。');
         }
+        // 休憩ボタンや退勤ボタンを押して誤動作が起きないようにする安全装置。
 
+        // ユーザーば押したボタンに応じて勤怠レコードの更新、休憩レコードの更新。またattendance_statusの更新。
         if ($action === 'clock_in' && $user->attendance_status === '勤務外') {
+            // 出勤前の状態で「出勤」ボタン押したときの処理。
             $attendance             = new AttendanceRecord();
+            // 新しい勤怠レコード（AttendanceRecord の空オブジェクト）を作成。
             $attendance->user_id    = $user->id;
+            // この勤怠レコードが「どのユーザーのものか」を設定。attendance_records.user_id にログイン中のユーザーIDをセット。
             $attendance->date       = now();
+            // 今日の日付をセット。
             $attendance->clock_in   = Carbon::now();
+            // 出勤時刻（clock_in）に現在時刻を保存。
             $attendance->save();
+            //ここで DB に INSERT 実行。
 
             $user->attendance_status = '出勤中';
             $user->save();
+            // ユーザーが今「出勤中」になったことを DB に保存。
 
         } elseif ($action === 'break_in' && $user->attendance_status === '出勤中') {
+            // 出勤中の人が「休憩入」ボタンを押した場合の処理。
             $attendance->breaks()->create([
                 'break_in' => Carbon::now(),
             ]);
+            // $attendance->breaks() は AttendanceRecord → AttendanceBreak のリレーションを表す。
+            // 新しい休憩レコードを作成し、break_in に現在時刻を保存する（break_outをnullのまま作成される）。
 
             $user->attendance_status = '休憩中';
             $user->save();
+            // statusを「休憩中」に変更。
 
         } elseif ($action === 'break_out' && $user->attendance_status === '休憩中') {
+            // 休憩戻りかつ休憩中の時
             $currentBreak = $attendance
                 ->breaks()
                 ->whereNull('break_out')
                 ->latest()
                 ->first();
+            // $attendance->breaks()はさっきと同じで休憩情報からwhereNull('break_out')（whereNull＝入力されていない）＝休憩終了時間がまだ入力されていないレコードを
+            // latest()=時間順で新しいものを
+            // first();=１件だけ取得する
 
             if ($currentBreak) {
                 $currentBreak->break_out = Carbon::now();
                 $currentBreak->save();
             }
+            // 休憩終了時刻を保存すること。
 
             $user->attendance_status = '出勤中';
             $user->save();
+            // ステータスを出勤中に変更すること。
 
         } elseif ($action === 'clock_out' && $user->attendance_status === '出勤中') {
+            // 退勤しかつ出勤中の時。
             $attendance->clock_out = Carbon::now();
 
             $clockIn  = Carbon::parse($attendance->clock_in);
@@ -101,7 +142,7 @@ class UserController extends Controller
                 if ($b->break_in && $b->break_out) {
                     $totalBreakTime +=
                         Carbon::parse($b->break_in)
-                              ->diffInMinutes(Carbon::parse($b->break_out));
+                            ->diffInMinutes(Carbon::parse($b->break_out));
                 }
             }
 
@@ -125,15 +166,19 @@ class UserController extends Controller
         }
 
         return redirect('/attendance');
+        // 処理が完了したら/attendance「打刻画面」へ結果を返す。
     }
 
     public function list(Request $request)
     {
         $user = Auth::user();
         $date = Carbon::parse($request->query('date', now()));
+        // URLにあるdateパラメータを読み、何も指定されていない場合はnow()が利用される。Carbon::parseは文字列や日付をCarbonに変換する機能を持つ。
 
         $startOfMonth = $date->copy()->startOfMonth();
+        // $date の 月初（1日） を表す Carbon オブジェクトをつくる。コピーしているのは元のデータを壊さないようにするため。
         $endOfMonth   = $date->copy()->endOfMonth();
+        // こちらは月末の日付を取得する。これにより$data = 2025-01-12ならstartOFMonthで2025/01/01が、endOFMonthで2025/01/31が取得される。
 
         $attendanceRecords = AttendanceRecord::where('user_id', $user->id)
             ->whereBetween('date', [$startOfMonth, $endOfMonth])
@@ -162,10 +207,13 @@ class UserController extends Controller
 
     public function detail($id)
     {
+        // コントローラのdetailメソッド定義。$idはURLパラメータ（detail/5の「5」）
         $attendanceRecord = AttendanceRecord::findOrFail($id);
+        // AttendanceRecordモデルから、主キー（id）でレコードを取得。見つからなかった場合404エラーを自動的に返す。
         $user = Auth::user();
+        // 現在ログインしているユーザーを取得する。
 
-        // マスター休憩
+        // マスター休憩（実際に記録されている休憩）の取得処理
         $masterBreaks = $attendanceRecord->breaks()->get()->map(function ($b) {
             return [
                 'break_in'  => $b->break_in ? Carbon::parse($b->break_in)->format('H:i') : null,
@@ -173,7 +221,7 @@ class UserController extends Controller
             ];
         })->toArray();
 
-        // 未承認申請
+        // 未承認申請の修正申請があるか確認する処理。
         $application = Application::where('attendance_record_id', $id)
             ->where('approval_status', '承認待ち')
             ->first();

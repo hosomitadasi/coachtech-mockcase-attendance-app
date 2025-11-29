@@ -13,11 +13,22 @@ class AdminController extends Controller
 {
     public function list(Request $request)
     {
+        // HTTPリクエスト（ブラウザから来る情報）を受け取る部分。$requestに「今日見ている日付」など、ブラウザから送られた情報が入る。
+
         $users = User::all();
-        // 変数usersにデータベース「User」のデータを全て取得させるようにする。
+        // データベースのuserテーブルに登録されている全てのユーザー情報（全行）を取得して、変数$usersに入れる。
+        // 画面に社員一覧を出したり、誰の勤怠を表示するかの「対象ユーザー一覧」を作るために使う。
+
         $date = Carbon::parse($request->query('date', Carbon::now()));
+        // $request->query('date', Carbon::now())はブラウザのURLに?date=2025-11-12 のように指定があればその値を取る。なければ Carbon::now()（＝現在日時）をデフォルトで使う。
+        // Carbon::parse(...)は、文字列（例 "2025-11-12"）や日付オブジェクトを Carbon（Laravelでよく使う日時の便利オブジェクト）に変換する。
+        // 上記内容から、$date は「見たい日」を表す Carbon オブジェクトになる。URLに?date=2025-11-12 があれば $date は 2025年11月12日 を表す Carbon。何もなければ今の日時。
+
         $attendanceRecords = AttendanceRecord::whereDate('date', $date)->whereIn('user_id', $users->pluck('id'))->get();
-        
+        // 指定の日に出勤記録がある場合はそれを全ユーザーの勤怠記録から引っ張ってきて$attendanceRecordsに入れている。
+        // AttendanceRecord::whereDate('date', $date)のwhereDate は「dateカラムの日付部分が指定の日と同じものを探す」命令。$dateに入っているCarbon を渡すことでLaravelが適切に日付比較を実行する。
+        // whereIn('user_id', $users->pluck('id'))のwhereIn は「user_id が指定した列の中に含まれているレコードだけに絞る」命令。$users->pluck('id')で$users（ユーザー全員）から「idだけ」を抜き出したリストを作成する。この組み合わせで、「その日かつユーザー一覧に含まれる人の勤怠」を取得する。
+        // 最後にgetを実行して結果を取得して$attendanceRecordsに格納する。
 
         return view('admin/admin-attendance-list', [
             'users' => $users,
@@ -26,14 +37,22 @@ class AdminController extends Controller
             'previousDay' => $date->copy()->subDay()->format('Y-m-d'),
             'nextDay' => $date->copy()->addDay()->format('Y-m-d'),
         ]);
+        // resources/views/admin/admin-attendance-list.blade.phpに結果を表示する処理。
+        // 'users' => $usersは、users という名前で $users の中身を使えるように渡している。view内でusersと出ればデータベース上のユーザーの名前が画像に表示される。
+        // 'attendanceRecords' => $attendanceRecordsでその日分の勤怠データ一覧を渡している。
+        // 'date' => $dateで表示している「日付」をそのまま渡す。
+        // 'previousDay' => $date->copy()->subDay()->format('Y-m-d')は、$date->copy() で $date（Carbonオブジェクト）のコピーを作成（元の$dataを壊さないため）し、->subDay() で1日前に移動。
+        // ->format('Y-m-d') で 2025-11-11 のような文字列に変換するといった作業を実施。これで前日へと移動するリンクを作成。'nextDay'は翌日となる。
     }
     // ある１日の勤怠一覧画面を表示する機能
 
     public function staffList()
     {
         $users = User::all();
+        // $usersにUser（登録されたスタッフ）のすべての情報を格納する。
 
         return view('admin/staff-list', compact('users'));
+        // admin/staff-listへ上記userの情報を渡し表示できるようにする。
     }
 
     public function staffDetailList(Request $request, $id)
